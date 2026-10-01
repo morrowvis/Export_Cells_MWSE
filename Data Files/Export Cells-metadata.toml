@@ -1,0 +1,15 @@
+[package]
+name = "Export Cells"
+version = "1.2.5"
+description = "Export Cells (MWSE)"
+homepage = "https://ms-arch.gitbook.io/morrowvis/export-cells"
+repository = "https://github.com/morrowvis/Export_Cells_MWSE"
+authors = [
+	"MS",
+]
+
+[dependencies.mwse]
+buildnumber = 5370
+
+[tools.mwse]
+lua-mod = "ExportCells"

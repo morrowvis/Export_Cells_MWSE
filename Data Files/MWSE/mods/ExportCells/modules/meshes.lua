@@ -126,22 +126,20 @@ local function discoverAllUsedFolders(query)
 end
 
 local function collectFlaggedMeshes(modFilter)
-    local fileName = config.flaggedMeshesFile or "flagged_meshes.txt"
+    local fileName = config.flaggedMeshesFile or "flagged_meshes.toml"
     lfs.mkdir(config.exportFolder)
     local path = config.exportFolder .. "\\" .. fileName
-    
-    local file = io.open(path, "r")
-    if not file then return nil end
-    
+
+    local lines = utils.readTomlLines(path, "meshes")
+    if not lines then return nil end
+
     local flaggedSet = {}
-    for line in file:lines() do
-        local mesh = line:gsub("^%s+", ""):gsub("%s+$", ""):lower():gsub("/", "\\")
-        if mesh ~= "" then
-            mesh = mesh:gsub("^meshes\\", "")
+    for _, line in ipairs(lines) do
+        if not line:match("^#") then
+            local mesh = line:lower():gsub("/", "\\"):gsub("^meshes\\", "")
             flaggedSet[mesh] = true
         end
     end
-    file:close()
     
     local modFilterLower = modFilter and modFilter:lower()
     if modFilterLower and (modFilterLower:find("%.esp$") or modFilterLower:find("%.esm$")) then

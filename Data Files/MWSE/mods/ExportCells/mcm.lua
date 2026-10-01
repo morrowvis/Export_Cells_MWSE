@@ -305,7 +305,7 @@ function mcm.registerModConfig()
 
     group:createYesNoButton({
         label = "Console Custom Commands",
-        description = "Executes the lines in console.lua when teleporting to landmass center.",
+        description = "Executes console.lua, or the commands in console.toml, when teleporting to landmass center.",
         variable = mwse.mcm.createTableVariable({ id = "runConsoleCustomCommands", table = config })
     })
 

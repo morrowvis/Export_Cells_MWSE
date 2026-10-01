@@ -379,6 +379,37 @@ function utils.restoreConsoleToggles()
     -- Do NOT reset togglesSetup — persistent toggles (e.g. TCL) stay on all session.
 end
 
+-- Reads `key` from a TOML file as trimmed, non-empty lines: a '''-wrapped block keeps lines comma- and quote-free.
+-- Returns nil when the file is missing; parse errors are logged.
+function utils.readTomlLines(path, key)
+    local data, err = toml.loadFile(path)
+    if not data then
+        if err and err.reason ~= "Could not open file." then
+            mwse.log(string.format("[Export Cells] Could not parse %s: %s", path, tostring(err.reason or err)))
+        end
+        return nil
+    end
+
+    local value = data[key]
+    local raw = {}
+    if type(value) == "string" then
+        for line in (value .. "\n"):gmatch("(.-)\r?\n") do
+            table.insert(raw, line)
+        end
+    elseif type(value) == "table" then
+        raw = value
+    end
+
+    local lines = {}
+    for _, line in ipairs(raw) do
+        local trimmed = tostring(line):gsub("^%s+", ""):gsub("%s+$", "")
+        if trimmed ~= "" then
+            table.insert(lines, trimmed)
+        end
+    end
+    return lines
+end
+
 function utils.executeConsoleFile()
     -- Check for console.lua first
     local luaPath = "Data Files/MWSE/mods/ExportCells/console.lua"
@@ -426,30 +457,24 @@ function utils.executeConsoleFile()
         return
     end
 
-    -- If console.lua was not found, check console.txt
-    local txtPath = "Data Files/MWSE/mods/ExportCells/console.txt"
-    file = io.open(txtPath, "r")
-    if not file then
-        txtPath = "MWSE/mods/ExportCells/console.txt"
-        file = io.open(txtPath, "r")
-    end
+    -- If console.lua was not found, check console.toml
+    local commands = utils.readTomlLines("Data Files/MWSE/mods/ExportCells/console.toml", "commands")
+        or utils.readTomlLines("MWSE/mods/ExportCells/console.toml", "commands")
 
-    if file then
-        mwse.log("[Export Cells] Found console.txt, executing lines...")
+    if commands then
+        mwse.log("[Export Cells] Found console.toml, executing lines...")
         local count = 0
-        for line in file:lines() do
-            local cmd = line:gsub("^%s+", ""):gsub("%s+$", "")
-            if cmd ~= "" and not cmd:match("^%-%-") and not cmd:match("^#") and not cmd:match("^;") then
+        for _, cmd in ipairs(commands) do
+            if not cmd:match("^%-%-") and not cmd:match("^#") and not cmd:match("^;") then
                 tes3.runLegacyScript{ command = cmd }
                 count = count + 1
             end
         end
-        file:close()
         if count > 0 then
-            tes3.messageBox("Executed %d console commands from console.txt", count)
+            tes3.messageBox("Executed %d console commands from console.toml", count)
         end
     else
-        mwse.log("[Export Cells] Neither console.lua nor console.txt was found.")
+        mwse.log("[Export Cells] Neither console.lua nor console.toml was found.")
     end
 end
 
