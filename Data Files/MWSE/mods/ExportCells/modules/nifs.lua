@@ -55,7 +55,7 @@ function nifs.export(regionCells, exportMode, currentIndex, totalCount)
                             utils.resetAnimation(ref)
                         end
                         if isActor then
-                            -- nil = bake refused (e.g. unsupported deform); skip the actor.
+                            -- nil = no scene node to bake; skip the actor.
                             node = utils.bakeActor(ref, exportMode == constants.EXPORT_MODE.LAYER)
                         end
 

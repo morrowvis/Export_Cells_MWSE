@@ -4,9 +4,8 @@ local utils = {}
 
 local config = nil
 local constants = require("ExportCells.constants")
-
--- One-shot guard so the unsupported-deform message doesn't spam per-actor.
-local warnedNoSkinDeform = false
+-- FFI stand-in for niTriShape:applySkinDeform(), which is not in released MWSE builds.
+local applySkinDeform = require("ExportCells.infrastructure.applySkinDeform")
 
 local function resetAnimation(ref)
     if not ref.animationData then
@@ -61,15 +60,12 @@ function utils.bakeActor(ref, isLayer)
             local t = invTransform * shape.worldTransform
             local clone = shape:clone()
             if clone.skinInstance then
-                -- applySkinDeform() is missing on some MWSE builds; warn and abort.
-                if type(clone.applySkinDeform) ~= "function" then
-                    if not warnedNoSkinDeform then
-                        warnedNoSkinDeform = true
-                        tes3.messageBox("Deform bake mode is not supported by this MWSE build (missing applySkinDeform). Set the actor bake mode to \"standard\" to export actors.")
-                    end
-                    return nil
+                -- MWSE's own method when the build has it, else the FFI module (same steps).
+                if type(clone.applySkinDeform) == "function" then
+                    clone:applySkinDeform()
+                else
+                    applySkinDeform(clone)
                 end
-                clone:applySkinDeform()
             end
             clone.name = ""
             clone:copyTransforms(t)
