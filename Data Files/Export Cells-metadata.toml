@@ -1,6 +1,6 @@
 [package]
 name = "Export Cells"
-version = "1.2.5"
+version = "1.2.6"
 description = "Export Cells (MWSE)"
 homepage = "https://ms-arch.gitbook.io/morrowvis/export-cells"
 repository = "https://github.com/morrowvis/Export_Cells_MWSE"
